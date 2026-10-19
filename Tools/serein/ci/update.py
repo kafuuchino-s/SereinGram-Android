@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -169,7 +170,16 @@ def publish(directory: Path) -> None:
     arm64 = [apk for apk in built if apk.abi == "arm64-v8a"]
     if len(arm64) != 1:
         raise SystemExit("Expected exactly one ARM64 APK")
-    asset = arm64[0].path
+    # GitHub normalizes parentheses and other punctuation in uploaded filenames.
+    # Stage an unchanged copy under a safe name; retain upstream Artifact filenames.
+    name = re.sub(
+        r"[^A-Za-z0-9._-]",
+        "-",
+        f"SereinGram-v{info['versionName']}-b{info['versionCode']}-arm64-v8a.apk",
+    )
+    asset = directory / name
+    if arm64[0].path != asset:
+        shutil.copyfile(arm64[0].path, asset)
     expected_assets = [(asset.name, asset.stat().st_size)]
     release = release_for(tag)
     if release and not release["draft"]:

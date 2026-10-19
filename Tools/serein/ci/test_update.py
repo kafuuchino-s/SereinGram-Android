@@ -1,7 +1,9 @@
 """Exercise sync/retry/versioning with real Git repos and publication with a fake API."""
 
 import json
+import re
 import subprocess
+from pathlib import Path
 
 import pytest
 import update
@@ -170,7 +172,12 @@ def publication(repos, monkeypatch, tmp_path):
             stored["release"] = {
                 "draft": True,
                 "prerelease": False,
-                "assets": [{"name": name, "size": (directory / name).stat().st_size}],
+                "assets": [
+                    {
+                        "name": re.sub(r"[^A-Za-z0-9._-]", ".", Path(args[3]).name),
+                        "size": Path(args[3]).stat().st_size,
+                    }
+                ],
             }
         elif args[:2] == ("release", "edit"):
             stored["release"]["draft"] = False
@@ -185,6 +192,10 @@ def test_only_complete_verified_arm64_is_published_and_rerun_changes_nothing(pub
     directory, stored = publication
     update.publish(directory)
     assert [call[1] for call in stored["calls"]] == ["create", "edit"]
+    assert stored["release"]["assets"][0]["name"] == "SereinGram-v13.0.2-b1255-arm64-v8a.apk"
+    assert (directory / "SereinGram-v13.0.2-b1255-arm64-v8a.apk").read_bytes() == (
+        directory / "SereinGram-v13.0.2(1255)-arm64-v8a.apk"
+    ).read_bytes()
     assert "--draft" in stored["calls"][0]
     assert "--latest" in stored["calls"][1]
     assert stored["release"]["draft"] is False
