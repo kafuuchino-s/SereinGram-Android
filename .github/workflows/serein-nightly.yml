@@ -30,7 +30,7 @@ jobs:
   publish:
     name: Build and publish
     # Only commits pushed to main, not proposed ones, and only once CI passed.
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    if: github.repository == 'eltavine/SereinGram-Android' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: telegram

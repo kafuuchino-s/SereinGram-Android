@@ -22,10 +22,12 @@ env:
 
 jobs:
   ci:
+    if: github.repository == 'eltavine/SereinGram-Android'
     name: CI
     uses: ./.github/workflows/serein-ci.yml
 
   release:
+    if: github.repository == 'eltavine/SereinGram-Android'
     name: Release
     needs:
       - ci

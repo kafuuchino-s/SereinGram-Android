@@ -23,6 +23,7 @@ env:
 
 jobs:
   guards:
+    if: github.repository == 'eltavine/SereinGram-Android'
     name: Guards
     runs-on: ubuntu-24.04
     steps:
@@ -78,6 +79,7 @@ jobs:
         run: Tools/serein/lint_commits.sh "$RANGE"
 
   modules:
+    if: github.repository == 'eltavine/SereinGram-Android'
     name: Module tests
     runs-on: ubuntu-24.04
     steps:
@@ -107,6 +109,7 @@ jobs:
   # Telegram ships FFmpeg, BoringSSL and the other libraries it links prebuilt, under
   # TMessagesProj/jni/prebuild, and builds the rest along with its own code.
   native:
+    if: github.repository == 'eltavine/SereinGram-Android'
     name: Native build (${{ matrix.abi }})
     runs-on: ubuntu-24.04
     strategy:
@@ -165,6 +168,7 @@ jobs:
           ./run libs native
 
   apk:
+    if: github.repository == 'eltavine/SereinGram-Android'
     name: APK
     runs-on: ubuntu-24.04
     needs:
