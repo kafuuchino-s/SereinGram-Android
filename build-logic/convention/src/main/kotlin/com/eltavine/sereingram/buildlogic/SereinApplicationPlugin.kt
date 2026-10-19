@@ -62,6 +62,17 @@ class SereinApplicationPlugin : Plugin<Project> {
                         )
                     }
                     android.defaultConfig.applicationId = APPLICATION_ID
+                    val releaseVersion = target.rootProject.file(".github/serein-release.properties")
+                    if (releaseVersion.isFile) {
+                        val releaseProperties = java.util.Properties().apply {
+                            releaseVersion.inputStream().use { load(it) }
+                        }
+                        val code = releaseProperties.getProperty("versionCode")?.toIntOrNull()
+                        if (code == null || code !in 1..2_100_000_000) {
+                            throw GradleException("Fork release versionCode must be within Android limits.")
+                        }
+                        android.defaultConfig.versionCode = code
+                    }
                     // Upstream reads these from a properties file only; CI passes them in the environment.
                     telegramApiId(properties["TELEGRAM_APP_ID"])?.let { android.defaultConfig.buildConfigField("int", "APP_ID", it) }
                     telegramApiHash(properties["TELEGRAM_APP_HASH"])?.let { android.defaultConfig.buildConfigField("String", "APP_HASH", "\"$it\"") }

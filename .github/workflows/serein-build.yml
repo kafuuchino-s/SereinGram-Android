@@ -2,6 +2,16 @@ name: Build SereinGram
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Exact source commit prepared for this release.
+        type: string
+        required: true
+    outputs:
+      artifact-name:
+        description: Signed and verified APK artifact.
+        value: ${{ jobs.apk.outputs.artifact-name }}
 
 permissions:
   contents: read
@@ -24,6 +34,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Set up JDK 21.
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -60,6 +71,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Native library cache key.
         id: key
@@ -113,6 +125,8 @@ jobs:
 
   apk:
     name: Signed APKs
+    outputs:
+      artifact-name: SereinGram-${{ inputs.ref || github.sha }}
     needs: native
     runs-on: ubuntu-24.04
     env:
@@ -123,6 +137,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Check out the libraries Gradle configures.
         run: git submodule update --init --depth 1 TMessagesProj/lib/jlatexmath TMessagesProj_Modules/media
@@ -164,7 +179,7 @@ jobs:
       - name: Keep the signed APKs.
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: SereinGram-${{ github.sha }}
+          name: SereinGram-${{ inputs.ref || github.sha }}
           path: |
             ${{ steps.build.outputs.apk-dir }}/*.apk
             ${{ steps.build.outputs.apk-dir }}/output-metadata.json

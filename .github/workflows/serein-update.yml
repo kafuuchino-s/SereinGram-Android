@@ -1,0 +1,81 @@
+name: Sync upstream and release
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: serein-own-fcm-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Merge upstream and prepare release
+    if: github.repository == 'kafuuchino-s/SereinGram-Android' && github.ref == 'refs/heads/own-fcm'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      build: ${{ steps.prepare.outputs.build }}
+      commit: ${{ steps.prepare.outputs.commit }}
+      tag: ${{ steps.prepare.outputs.tag }}
+    steps:
+      - name: Check out the maintenance branch with its merge history.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: own-fcm
+          fetch-depth: 0
+
+      - name: Set the automation commit identity.
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Merge and allocate a release version only when needed.
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: python3 Tools/serein/ci/update.py prepare --event "$EVENT"
+
+  build:
+    name: Build and verify the prepared source
+    needs: prepare
+    if: needs.prepare.outputs.build == 'true'
+    uses: ./.github/workflows/serein-build.yml
+    with:
+      ref: ${{ needs.prepare.outputs.commit }}
+    secrets: inherit
+
+  publish:
+    name: Publish the verified ARM64 APK
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the exact prepared source.
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+          persist-credentials: false
+
+      - name: Download the artifact from the successful verified build.
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ${{ needs.build.outputs.artifact-name }}
+          path: verified-apks
+
+      - name: Set up uv.
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: false
+
+      - name: Publish the complete draft without replacing tags or assets.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: uv run --with httpx==0.28.1 python Tools/serein/ci/update.py publish --apk-dir verified-apks
