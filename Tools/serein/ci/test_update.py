@@ -83,6 +83,19 @@ def test_new_upstream_same_version_is_merged_and_code_increases(repos):
     assert (fork / "fork.txt").read_text() == "fork\n"
 
 
+@pytest.mark.parametrize(("upstream_code", "expected_code"), [(1257, "1257"), (1255, "1256")])
+def test_new_upstream_version_uses_its_name_and_monotonic_code(repos, upstream_code, expected_code):
+    upstream, fork, origin = repos
+    update.prepare("workflow_dispatch")
+    commit(upstream, "gradle.properties", "APP_VERSION_NAME=13.1.1\n")
+    new = commit(upstream, "TMessagesProj/build.gradle", f"def verCode = {upstream_code}\n")
+    update.prepare("schedule")
+    assert update.state()["upstreamCommit"] == new
+    assert update.state()["versionName"] == "13.1.1"
+    assert update.state()["versionCode"] == expected_code
+    assert git_at(origin, "rev-parse", "own-fcm") == git_at(fork, "rev-parse", "HEAD")
+
+
 def test_new_fork_source_manual_build_also_increases_code(repos):
     _, fork, _ = repos
     update.prepare("workflow_dispatch")
