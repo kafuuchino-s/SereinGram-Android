@@ -103,6 +103,10 @@ from its code.
 
 ### Chats and messages
 
+- **Advertising rules** for groups and channels: built-in labels, custom keywords,
+  JSON import/export, a configurable HTTPS subscription, and manual marking from
+  a message menu. A local history explains matches and restores false positives.
+  See [the rule format and subscription guide](docs/adblock-rules.md).
 - **Admin shortcuts** in a chat's menu: recent actions, administrators,
   members, permissions, statistics and invite links.<br>
   <sub>After Cherrygram, exteraGram, OctoGram and NagramX ·
@@ -130,6 +134,16 @@ from its code.
 
 ### Voice and media
 
+- **Save manual downloads to a folder of your choice**, including a subfolder
+  of Download, with their original names. The saved file is read back byte for
+  byte before the identical app copy is removed to save space. Failed saves or
+  verification keep the app copy. Open saved files in your file manager;
+  opening them in chat may download them again.
+  Choose the folder under **Settings → SereinGram → Downloads**.
+  Dialogs on enabling and after each saved download explain the download icon
+  and where to find the file.
+  Applies to new manual downloads; existing files are not moved.<br>
+  <sub>[SereinGram Android #7](https://github.com/eltavine/SereinGram-Android/issues/7)</sub>
 - **Voice transcription with your own service**: voice and video messages
   become text through any service that speaks OpenAI's transcription API,
   without Telegram Premium.<br>
@@ -224,6 +238,10 @@ from its code.
 Settings missing from the file are read from the environment. The
 `LOCAL_PROPERTIES` environment variable, when set, holds the whole file in
 base64 and is read in its place.
+
+The default API pair matches Nagram's verified 13.0.2 release. See
+[joining diagnostics](docs/join-diagnostics.md) for the reference package and
+how to distinguish local API configuration from the server's current session.
 
 ## Development
 

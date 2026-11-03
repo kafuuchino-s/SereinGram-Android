@@ -1,6 +1,8 @@
 package com.eltavine.sereingram.app
 
 import android.app.Application
+import com.eltavine.sereingram.features.adblock.AdBlockFeature
+import com.eltavine.sereingram.features.join.JoinFeature
 import com.eltavine.sereingram.adapters.prefs.PreferencesLocalNameStore
 import com.eltavine.sereingram.adapters.prefs.PreferencesStores
 import com.eltavine.sereingram.adapters.room.RoomBookmarkStore
@@ -15,6 +17,7 @@ import com.eltavine.sereingram.features.chatlock.ChatLockFeature
 import com.eltavine.sereingram.features.chatshortcuts.ChatShortcutsFeature
 import com.eltavine.sereingram.features.declutter.DeclutterFeature
 import com.eltavine.sereingram.features.dns.DnsFeature
+import com.eltavine.sereingram.features.downloads.DownloadsFeature
 import com.eltavine.sereingram.features.ghost.GhostFeature
 import com.eltavine.sereingram.features.history.HistoryFeature
 import com.eltavine.sereingram.features.input.InputFeature
@@ -76,10 +79,13 @@ object SereinApp {
         return ModuleRegistry(
             listOf(
                 ServicesModule,
+                AdBlockFeature(application),
+                JoinFeature,
                 ChatLockFeature,
                 ChatShortcutsFeature,
                 DeclutterFeature,
                 DnsFeature,
+                DownloadsFeature(application),
                 HistoryFeature(File(application.filesDir, "serein_media")) { account ->
                     historyStores.computeIfAbsent(account) { RoomHistoryStore(application, account) }
                 },
